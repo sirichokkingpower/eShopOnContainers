@@ -167,6 +167,11 @@ namespace Microsoft.eShopOnContainers.Services.Identity.API
             // Adds IdentityServer
             app.UseIdentityServer();
 
+            // Fix a problem with chrome. Chrome enabled a new feature "Cookies without SameSite must be secure", 
+            // the coockies shold be expided from https, but in eShop, the internal comunicacion in aks and docker compose is http.
+            // To avoid this problem, the policy of cookies shold be in Lax mode.
+            app.UseCookiePolicy(new CookiePolicyOptions { MinimumSameSitePolicy = AspNetCore.Http.SameSiteMode.Lax });
+
             app.UseHttpsRedirection();
             app.UseMvc(routes =>
             {

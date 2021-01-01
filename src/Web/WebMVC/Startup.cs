@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Logging;
 using Polly;
 using Polly.Extensions.Http;
 using StackExchange.Redis;
@@ -66,6 +67,7 @@ namespace Microsoft.eShopOnContainers.WebMVC
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                IdentityModelEventSource.ShowPII = true;
             }
             else
             {
@@ -96,6 +98,10 @@ namespace Microsoft.eShopOnContainers.WebMVC
             app.UseAuthentication();
 
             WebContextSeed.Seed(app, env, loggerFactory);
+
+            // Fix samesite issue when running eShop from docker-compose locally as by default http protocol is being used
+            // Refer to https://github.com/dotnet-architecture/eShopOnContainers/issues/1391
+            app.UseCookiePolicy(new CookiePolicyOptions { MinimumSameSitePolicy = AspNetCore.Http.SameSiteMode.Lax });
 
             app.UseHttpsRedirection();
             app.UseMvc(routes =>
